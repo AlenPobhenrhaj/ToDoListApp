@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">ToDoListApp</string>
+    <string name="task_description">Description</string>
+    <string name="add_task">Add Task</string>
+    <string name="add">add</string>
+    <string name="cancel">cancel</string>
+    <string name="delete_task_title">delete</string>
+    <string name="delete_task_message">Are you sure you want to delete this item?</string>
+    <string name="delete">confirm</string>
+    <string name="delete_task">Delete this</string>
+</resources>
