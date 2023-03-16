@@ -1,21 +1,22 @@
 package com.example.todolistapp.adapters
 
-import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
-import com.example.todolistapp.R
+import com.example.todolistapp.databinding.TaskItemBinding
+import androidx.lifecycle.lifecycleScope
 import com.example.todolistapp.activity.MainActivity
 import com.example.todolistapp.model.Task
-import com.example.todolistapp.databinding.TaskItemBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 
-
-
-class TaskAdapter(private val tasks: MutableList<Task>, private val onTaskDeleteClickListener: OnTaskDeleteClickListener) : RecyclerView.Adapter<TaskAdapter.TaskItemBindingViewHolder>() {
+class TaskAdapter(
+    private val tasks: MutableList<Task>,
+    private val onTaskDeleteClickListener: OnTaskDeleteClickListener,
+    private val onTaskUpdateListener: OnTaskUpdateListener,
+    private val coroutineScope: CoroutineScope
+) : RecyclerView.Adapter<TaskAdapter.TaskItemBindingViewHolder>() {
 
 
 
@@ -37,12 +38,20 @@ class TaskAdapter(private val tasks: MutableList<Task>, private val onTaskDelete
 
                 //Delete icon
                 imageViewDeleteTask.setOnClickListener {
-                    onTaskDeleteClickListener.onTaskDeleteClick(adapterPosition)
+                    onTaskDeleteClickListener.onTaskDeleteClick(tasks[adapterPosition])
                 }
+
 
             }
         }
     }
+
+    private fun toggleTaskCompletion(position: Int, isChecked: Boolean) {
+        val task = tasks[position]
+        val updatedTask = task.copy(isCompleted = isChecked)
+        onTaskUpdateListener.onTaskUpdate(updatedTask)
+    }
+
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskItemBindingViewHolder {
@@ -59,24 +68,16 @@ class TaskAdapter(private val tasks: MutableList<Task>, private val onTaskDelete
 
     override fun getItemCount() = tasks.size
 
-    private fun toggleTaskCompletion(position: Int, isChecked: Boolean) {
-        Handler(Looper.getMainLooper()).post {
-            val task = tasks[position]
-            val updatedTask = task.copy(isCompleted = isChecked)
-            tasks[position] = updatedTask
-            notifyItemChanged(position)
-        }
-    }
 
     interface OnTaskDeleteClickListener {
-        fun onTaskDeleteClick(position: Int)
+        fun onTaskDeleteClick(task: Task)
     }
 
-    internal fun deleteTask(position: Int) {
-        tasks.removeAt(position)
-        notifyItemRemoved(position)
-        notifyItemRangeChanged(position, tasks.size)
+
+    interface OnTaskUpdateListener {
+        fun onTaskUpdate(task: Task)
     }
+
 
 }
 
