@@ -1,8 +1,8 @@
 package com.example.todolistapp.activity
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.todolistapp.R
 import com.example.todolistapp.adapters.TaskAdapter
@@ -13,12 +13,11 @@ import com.example.todolistapp.databinding.DialogAddTaskBinding
 import com.example.todolistapp.model.Task
 import kotlinx.coroutines.*
 
-
 class MainActivity : AppCompatActivity(),
     TaskAdapter.OnTaskDeleteClickListener,
     TaskAdapter.OnTaskCheckedChangeListener {
 
-    private var binding: ActivityMainBinding? = null
+    private lateinit var binding: ActivityMainBinding
     private val tasks: MutableList<Task> = mutableListOf()
 
     private val taskAdapter: TaskAdapter by lazy {
@@ -32,32 +31,42 @@ class MainActivity : AppCompatActivity(),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding?.root)
+        setContentView(binding.root)
 
+        setSupportActionBar(binding.toolbar)
 
-        binding!!.rvTasks.layoutManager = LinearLayoutManager(this)
-        binding!!.rvTasks.adapter = taskAdapter
-
-
-        binding!!.fabActionButton.setOnClickListener {
-            showAddTaskDialog()
+        binding.rvTasks.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = taskAdapter
+            setPadding(
+                resources.getDimensionPixelSize(R.dimen.padding_large),
+                resources.getDimensionPixelSize(R.dimen.padding_large),
+                resources.getDimensionPixelSize(R.dimen.padding_large),
+                resources.getDimensionPixelSize(R.dimen.padding_large)
+            )
+            clipToPadding = false
         }
 
-        //ToolBar
-        setSupportActionBar(binding!!.toolbar)
+        binding.fabActionButton.apply {
+            setOnClickListener {
+                showAddTaskDialog()
+            }
 
-        // Observe LiveData from the database
-        taskDao.getAllTasks().observe(this) { taskEntities ->
-            binding!!.rvTasks.post {
-                tasks.clear()
-                tasks.addAll(taskEntities.map { Task.fromEntity(it) })
-                taskAdapter.notifyDataSetChanged()
+            setOnLongClickListener {
+                showAddTaskDialog()
+                true
             }
         }
 
+        // Observe LiveData from the database
+        taskDao.getAllTasks().observe(this) { taskEntities ->
+            tasks.clear()
+            tasks.addAll(taskEntities.map { Task.fromEntity(it) })
+            taskAdapter.notifyDataSetChanged()
+        }
     }
 
-    private fun showAddTaskDialog() {
+    private fun showAddTaskDialog(): Boolean {
         val dialogBinding = DialogAddTaskBinding.inflate(layoutInflater)
         val alertDialog = AlertDialog.Builder(this)
             .setTitle(R.string.add_task)
@@ -72,6 +81,7 @@ class MainActivity : AppCompatActivity(),
             .create()
 
         alertDialog.show()
+        return true
     }
 
     private fun addTask(taskDescription: String) {
@@ -104,7 +114,7 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun onTaskCheckedChange(task: Task, isChecked: Boolean) {
-        // Update the task in the database
+// Update the task in the database
         CoroutineScope(Dispatchers.IO).launch {
             val updatedTask = task.copy(isCompleted = isChecked)
             taskDao.updateTask(updatedTask.toEntity())
@@ -133,9 +143,4 @@ class MainActivity : AppCompatActivity(),
             .show()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        binding = null
-    }
 }
-
