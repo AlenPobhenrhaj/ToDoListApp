@@ -10,7 +10,7 @@ interface TaskDao {
     fun getAllTasks(): LiveData<List<TaskEntity>>
 
     @Insert
-    suspend fun insertTask(task: TaskEntity): Long // Make sure this function returns a Long
+    suspend fun insertTask(task: TaskEntity): Long
 
     @Update
     suspend fun updateTask(task: TaskEntity)

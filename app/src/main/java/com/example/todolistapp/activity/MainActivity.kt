@@ -3,7 +3,6 @@ package com.example.todolistapp.activity
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
-import androidx.lifecycle.map
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.todolistapp.R
 import com.example.todolistapp.adapters.TaskAdapter

@@ -14,12 +14,12 @@ import kotlinx.coroutines.withContext
 class TaskAdapter(
     private val tasks: MutableList<Task>,
     private val onTaskDeleteClickListener: OnTaskDeleteClickListener,
-    private val onTaskCheckedChangeListener: OnTaskCheckedChangeListener // Add the new listener here
+    private val onTaskCheckedChangeListener: OnTaskCheckedChangeListener
 ) : RecyclerView.Adapter<TaskAdapter.TaskItemBindingViewHolder>() {
 
 
 
-    inner class TaskItemBindingViewHolder(val binding: TaskItemBinding) :
+    inner class TaskItemBindingViewHolder(private val binding: TaskItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(task: Task) {
@@ -81,10 +81,9 @@ class TaskAdapter(
     }
 
 
-
     internal fun deleteTask(position: Int) {
         CoroutineScope(Dispatchers.IO).launch {
-            onTaskDeleteClickListener.deleteTask(tasks[position]) // Update this line
+            onTaskDeleteClickListener.deleteTask(tasks[position])
             tasks.removeAt(position)
             withContext(Dispatchers.Main) {
                 notifyItemRemoved(position)
