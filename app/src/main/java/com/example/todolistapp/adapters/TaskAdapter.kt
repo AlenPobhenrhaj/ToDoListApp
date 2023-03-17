@@ -1,21 +1,21 @@
 package com.example.todolistapp.adapters
 
-import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
-import com.example.todolistapp.R
-import com.example.todolistapp.activity.MainActivity
 import com.example.todolistapp.model.Task
 import com.example.todolistapp.databinding.TaskItemBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
-
-
-class TaskAdapter(private val tasks: MutableList<Task>, private val onTaskDeleteClickListener: OnTaskDeleteClickListener) : RecyclerView.Adapter<TaskAdapter.TaskItemBindingViewHolder>() {
+class TaskAdapter(
+    private val tasks: MutableList<Task>,
+    private val onTaskDeleteClickListener: OnTaskDeleteClickListener,
+    private val onTaskCheckedChangeListener: OnTaskCheckedChangeListener // Add the new listener here
+) : RecyclerView.Adapter<TaskAdapter.TaskItemBindingViewHolder>() {
 
 
 
@@ -28,8 +28,8 @@ class TaskAdapter(private val tasks: MutableList<Task>, private val onTaskDelete
                 tvTaskDescription.text = task.description
 
                 // Set a click listener for the CheckBox
-                cbCompleted.setOnCheckedChangeListener { _, isChecked ->
-                    toggleTaskCompletion(adapterPosition, isChecked)
+                cbCompleted.setOnClickListener {
+                    onTaskCheckedChangeListener.onTaskCheckedChange(task, cbCompleted.isChecked)
                 }
 
                 // Update the TextView style based on the task completion status
@@ -60,23 +60,39 @@ class TaskAdapter(private val tasks: MutableList<Task>, private val onTaskDelete
     override fun getItemCount() = tasks.size
 
     private fun toggleTaskCompletion(position: Int, isChecked: Boolean) {
-        Handler(Looper.getMainLooper()).post {
-            val task = tasks[position]
-            val updatedTask = task.copy(isCompleted = isChecked)
-            tasks[position] = updatedTask
-            notifyItemChanged(position)
+        val task = tasks[position]
+        val updatedTask = task.copy(isCompleted = isChecked)
+        tasks[position] = updatedTask
+        notifyItemChanged(position)
+        CoroutineScope(Dispatchers.IO).launch {
+            onTaskDeleteClickListener.updateTask(updatedTask)
         }
     }
 
+
     interface OnTaskDeleteClickListener {
         fun onTaskDeleteClick(position: Int)
+        fun updateTask(task: Task)
+        fun deleteTask(task: Task)
     }
 
-    internal fun deleteTask(position: Int) {
-        tasks.removeAt(position)
-        notifyItemRemoved(position)
-        notifyItemRangeChanged(position, tasks.size)
+    interface OnTaskCheckedChangeListener {
+        fun onTaskCheckedChange(task: Task, isChecked: Boolean)
     }
+
+
+
+    internal fun deleteTask(position: Int) {
+        CoroutineScope(Dispatchers.IO).launch {
+            onTaskDeleteClickListener.deleteTask(tasks[position]) // Update this line
+            tasks.removeAt(position)
+            withContext(Dispatchers.Main) {
+                notifyItemRemoved(position)
+                notifyItemRangeChanged(position, tasks.size)
+            }
+        }
+    }
+
 
 }
 
